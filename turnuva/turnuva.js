@@ -17,6 +17,8 @@ function startTournament() {
             return;
         }
         players.push(playerName);
+        console.log("Oyuncular: " + playerName);
+        
     }
     let roundNumber = 1;
     while (players.length > 1) {
