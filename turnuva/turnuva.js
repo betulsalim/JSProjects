@@ -73,7 +73,7 @@ function startTournament() {
 // Array'i rastgele karıştıran fonksiyon
 function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
+        const j = Math.floor(Math.random() * (i + 1));//0 ile i arasında bir sayı üretmesi için
         [array[i], array[j]] = [array[j], array[i]]; // Elementleri değiştir
     }
     return array;
