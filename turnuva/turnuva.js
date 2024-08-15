@@ -3,83 +3,79 @@
 //turnuvada skor sistemi olacak ve bu skor sistemi ile kazanan ve kaybeden belirlenecek kaybeden oyundan çıkacak kazanan bir üst tura geçecek.
 //bu şekilde olan eleme yöntemiyle final turu kazananı belirlenecek.
 
-function startTournament() {
-    const playerCount = 5;
-    if (playerCount < 2 || isNaN(playerCount)) {
-        alert("Geçerli bir sayı girilmedi. Turnuva sonlandırılıyor.");
-        return;
-    }
-    alert(`${playerCount} oyuncu ile turnuvamız başlıyor...`);
-
-    let players = [];
-    for(let i = 1; i <= playerCount; i++)
-        {
-            players.push(`Player ${[i]}`);
-        }
-    alert("Oyuncularımız: \n" + players.join(", "));
-    console.log("Oyuncular: \n" + players.join(", "));
-
-    let roundNumber = 1;
-    while (players.length > 1) {
-        let nextRoundPlayers = [];
-        let roundResults = [];
-        players = shuffleArray(players); // Oyuncuları karıştır
-        console.log(`\n=== Round ${roundNumber} ===`);
-
-        for (let i = 0; i < players.length; i += 2) {
-            if (i + 1 >= players.length) {
-                alert(players[i] + " otomatik olarak bir üst tura geçti.");
-                roundResults.push([players[i], "-", "-", "-", players[i]]);
-                nextRoundPlayers.push(players[i]);
-                continue;
-            }
-
-            // Eşleşen oyuncuları bildir
-            alert("Eşleşme: " + players[i] + " vs " + players[i + 1]);
-
-            let score1, score2;
-            do {
-                score1 = Math.floor(Math.random() * 10);
-                score2 = Math.floor(Math.random() * 10);
-                console.log(`${players[i]} skoru: ` + score1);
-                console.log(`${players[i + 1]} skoru: ` + score2);
-                alert(`${players[i]} skoru: ${score1} vs. \n ${players[i + 1]} skoru: ${score2}`)
-                if (score1 === score2) {
-                    alert("Berabere! Maç tekrarlanacak.");
-                    console.log("..............Maç Tekrarlanacak..............");
-                    
-                }
-            } while (score1 === score2);
-
-            let winner;
-            if (score1 > score2) {
-                alert(players[i] + " kazandı!");
-                winner = players[i];
-            } else {
-                alert(players[i + 1] + " kazandı!");
-                winner = players[i + 1];
-            }
-
-            roundResults.push([players[i], players[i + 1], score1, score2, winner]);
-            nextRoundPlayers.push(winner); // Kazananı bir sonraki tur için kaydediyoruz
+async function startTournament(playerCount) {
+    try {
+        const response = await fetch('players.json');
+        const data = await response.json();
+        
+        if (!isValidPlayerCount(playerCount, data.players.length)) {
+            console.error("Geçerli bir oyuncu sayısı girilmedi. Turnuva sonlandırılıyor.");
+            return;
         }
 
-        console.log("Player 1 | Player 2 | Score 1 | Score 2 | Winner");
-        console.log("---------------------------------------------");
-        roundResults.forEach((match) => {
-            console.log(`${match[0]}   | ${match[1]}   | Score 1: ${match[2]}      | Score 2:  ${match[3]}      | Winner:  ${match[4]}`);
-        });
+        let players = selectPlayers(data.players, playerCount);
 
-        players = nextRoundPlayers; // Sadece kazananlar bir sonraki turda yarışacak
-        roundNumber++;
-    }
+        console.log(`${playerCount} oyuncu ile turnuvamız başlıyor...`);
+        console.log("Oyuncular: \n" + players.join(", "));
 
-    if (players.length === 1) {
-        alert("Şampiyon: " + players[0]);
+        let roundNumber = 1;
+        while (players.length > 1) {
+            console.log(`\n=== Round ${roundNumber} ===`);
+            players = playRound(players);
+            roundNumber++;
+        }
+
+        console.log("Şampiyon: " + players[0]);
+
+    } catch (error) {
+        console.error('JSON verisi alınırken hata oluştu:', error);
     }
 }
 
-// Oyuncuları rastgele karıştıran fonksiyon
+function isValidPlayerCount(playerCount, maxPlayers) {
+    return playerCount >= 2 && playerCount <= maxPlayers;
+}
+
+function selectPlayers(players, playerCount) {
+    return players.slice(0, playerCount);
+}
+
+function playRound(players) {
+    players = shuffleArray(players);
+    let nextRoundPlayers = [];
+
+    for (let i = 0; i < players.length; i += 2) {
+        if (i + 1 >= players.length) {
+            console.log(`${players[i]} otomatik olarak bir üst tura geçti.`);
+            nextRoundPlayers.push(players[i]);
+        } else {
+            const winner = playMatch(players[i], players[i + 1]);
+            nextRoundPlayers.push(winner);
+        }
+    }
+
+    return nextRoundPlayers;
+}
+
+function playMatch(player1, player2) {
+    let score1, score2;
+    do {
+        score1 = getRandomScore();
+        score2 = getRandomScore();
+        console.log(`${player1} skoru: ${score1}, ${player2} skoru: ${score2}`);
+        
+        if (score1 === score2) {
+            console.log("..............Maç Tekrarlanacak..............");
+        }
+    } while (score1 === score2);
+
+    return score1 > score2 ? player1 : player2;
+}
+
+function getRandomScore() {
+    return Math.floor(Math.random() * 10);
+}
+
 function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -88,4 +84,6 @@ function shuffleArray(array) {
     return array;
 }
 
-startTournament();
+// Koddan veya kullanıcıdan oyuncu sayısını belirle
+const playerCount = parseInt(prompt("Kaç oyuncu katılacak?"), 10);  // Veya manuel olarak const playerCount = 5; 
+startTournament(playerCount);

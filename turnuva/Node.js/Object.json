@@ -1,0 +1,12 @@
+{
+    "brand" : "Xiaomi",
+    "model" : "RedMi 5 Plus",
+    "price" : 12999,
+    "colors" : ["black" , "grey" , "blue" , "red"],
+    "camera" : {
+        "front" : 8,
+        "back" : 12.5
+    },
+    "stock" : true,
+    "firm" : null
+}
