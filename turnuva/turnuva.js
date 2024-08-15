@@ -5,51 +5,51 @@
 
 async function startTournament(playerCount) {
     try {
+        // JSON verisini al
         const response = await fetch('players.json');
         const data = await response.json();
         
-        if (!isValidPlayerCount(playerCount, data.players.length)) {
+        // JSON'dan oyuncu listesi al
+        let players = data.players;
+
+        // Oyuncu sayısını doğrula
+        if (playerCount < 2) {
             console.error("Geçerli bir oyuncu sayısı girilmedi. Turnuva sonlandırılıyor.");
             return;
         }
 
-        let players = selectPlayers(data.players, playerCount);
+        // Kullanıcı sayısı JSON'dan fazlaysa, eksik oyuncuları ekleyin
+        if (players.length < playerCount) {
+            players = players.concat(generateAdditionalPlayers(playerCount - players.length, getMaxPlayerNumber(players) + 1));
+        }
 
+        // Oyuncu listesini sıralı hale getir ve kullanıcı tarafından belirlenen sayıda oyuncu seç
+        players = sortPlayers(players).slice(0, playerCount);
+        
         console.log(`${playerCount} oyuncu ile turnuvamız başlıyor...`);
         console.log("Oyuncular: \n" + players.join(", "));
 
-        let roundNumber = 1;
+        // Turnuvayı başlat
         while (players.length > 1) {
-            console.log(`\n=== Round ${roundNumber} ===`);
             players = playRound(players);
-            roundNumber++;
         }
 
         console.log("Şampiyon: " + players[0]);
-
     } catch (error) {
         console.error('JSON verisi alınırken hata oluştu:', error);
     }
 }
 
-function isValidPlayerCount(playerCount, maxPlayers) {
-    return playerCount >= 2 && playerCount <= maxPlayers;
-}
-
-function selectPlayers(players, playerCount) {
-    return players.slice(0, playerCount);
-}
-
 function playRound(players) {
-    players = shuffleArray(players);
-    let nextRoundPlayers = [];
+    const shuffledPlayers = shuffleArray(players);
+    const nextRoundPlayers = [];
 
-    for (let i = 0; i < players.length; i += 2) {
-        if (i + 1 >= players.length) {
-            console.log(`${players[i]} otomatik olarak bir üst tura geçti.`);
-            nextRoundPlayers.push(players[i]);
+    for (let i = 0; i < shuffledPlayers.length; i += 2) {
+        if (i + 1 >= shuffledPlayers.length) {
+            console.log(`${shuffledPlayers[i]} otomatik olarak bir üst tura geçti.`);
+            nextRoundPlayers.push(shuffledPlayers[i]);
         } else {
-            const winner = playMatch(players[i], players[i + 1]);
+            const winner = playMatch(shuffledPlayers[i], shuffledPlayers[i + 1]);
             nextRoundPlayers.push(winner);
         }
     }
@@ -77,13 +77,40 @@ function getRandomScore() {
 }
 
 function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
+    const arrayCopy = array.slice(); // Orijinal diziyi değiştirmemek için kopyala
+    for (let i = arrayCopy.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]]; // Elementleri değiştir
+        [arrayCopy[i], arrayCopy[j]] = [arrayCopy[j], arrayCopy[i]]; // Elementleri değiştir
     }
-    return array;
+    return arrayCopy;
 }
 
-// Koddan veya kullanıcıdan oyuncu sayısını belirle
-const playerCount = parseInt(prompt("Kaç oyuncu katılacak?"), 10);  // Veya manuel olarak const playerCount = 5; 
-startTournament(playerCount);
+function generateAdditionalPlayers(count, startIndex) {
+    // Belirtilen sayıda ek oyuncu oluşturur
+    return Array.from({ length: count }, (_, i) => `Player ${startIndex + i}`);
+}
+
+function getMaxPlayerNumber(players) {
+    // Mevcut oyuncuların en yüksek numarasını bulur
+    return Math.max(...players.map(player => {
+        const match = player.match(/Player (\d+)/);
+        return match ? parseInt(match[1], 10) : 0;
+    }));
+}
+
+function sortPlayers(players) {
+    // Oyuncuları numaralarına göre sıralar
+    return players.slice().sort((a, b) => {
+        const numA = parseInt(a.match(/Player (\d+)/)[1], 10);
+        const numB = parseInt(b.match(/Player (\d+)/)[1], 10);
+        return numA - numB;
+    });
+}
+
+// Kullanıcıdan oyuncu sayısını al
+const playerCount = parseInt(prompt("Kaç oyuncu katılacak?"), 10);
+if (!isNaN(playerCount)) {
+    startTournament(playerCount);
+} else {
+    console.error("Geçersiz oyuncu sayısı.");
+}
