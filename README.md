@@ -6,4 +6,4 @@ in my turnuva project the playerCount can be change but with for statement I use
 
 can make player name go up or down like if playerCount = 8; my last player name is Player 8 or if playerCount = 4; my last player name is Player 4.
 
-in Node.js folder I learned how to use JSON with JavScript
+in Node.js folder I learned how to use JSON with JavaScript
